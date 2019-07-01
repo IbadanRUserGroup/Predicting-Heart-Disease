@@ -1,12 +1,9 @@
 ---
 title: "Machine Learning with a Heart"
 subtitle: "Predicting Heart Disease"
-author: "[Ogundepo Ezekiel Adebayo](https://bit.ly/gbganalyst)"
-
 author: |
   | [Ogundepo Ezekiel Adebayo](https://bit.ly/gbganalyst)
-  | [I'm on Twitter](www.twitter.com/gbgana)
-
+  | [I'm on Twitter](https://twitter.com/gbganalyst)
 
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
