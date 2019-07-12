@@ -205,8 +205,8 @@ plot_bars = function(df, cat_cols, facet_var){
     p = ggplot(df, aes(x = .data[[col]], fill = .data[[col]])) + 
       geom_bar(show.legend = F)  +
       labs(x = col, y = "Number of patients", title = str_c('Bar plot of ', col, '\nfor heart disease')) +
-      facet_wrap(vars({{facet_var}})) +
-      theme(axis.title.y = element_text(size = 12, face = 'bold'), axis.title.x = element_text(size = 12, face = 'bold'),
+      facet_wrap(vars({{facet_var}}), scales = 'free_y') +
+     theme(axis.title.y = element_text(size = 12, face = 'bold'), axis.title.x = element_text(size = 12, face = 'bold'),
             axis.text.x = element_text(angle = 90, hjust = 1, face = 'bold'))
     
     print(p)
@@ -744,4 +744,4 @@ This study considered $17$ different catalogs of machine learning models which a
 
 ---
 
-If you like this writeup, you can also follow me on [Twitter](https://www.twitter.com/gbganalyst){target="_blank"} and [Linkedin](https://www.linkedin.com/in/ezekiel-ogundepo/){target="_blank"} for more update in `R` and `Python` for datascience.
+If you like this writeup, you can also follow me on [Twitter](https://www.twitter.com/gbganalyst){target="_blank"} and [Linkedin](https://www.linkedin.com/in/ezekiel-ogundepo/){target="_blank"} for more updates in `R` and `Python` for datascience.
