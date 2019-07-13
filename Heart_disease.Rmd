@@ -68,7 +68,7 @@ As a first step we must load the dataset.
 
 ```{r Training dataset, message=FALSE, warning=FALSE, comment=FALSE, cache=TRUE,include=TRUE}
 
-# Import data
+# Import dataset
 
 data_values <- read_csv("Data from DRIVENDATA/train_values.csv")
 data_labels <- read_csv("Data from DRIVENDATA/train_labels.csv")
@@ -129,7 +129,7 @@ There are eight columns in this dataset which do not have the correct data type 
 
 ```{r heart disease dataset, message=FALSE, warning=TRUE, comment=FALSE, cache=TRUE,include=TRUE}
 
-disease_data <-  disease_data[-1] # patient_id column dropped
+disease_data <-  disease_data[-1] #  patient_id column was dropped
 
 factor_variable_position <- c(1, 2, 4, 6, 7, 10, 13, 14)
 
