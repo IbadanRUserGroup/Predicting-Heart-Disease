@@ -20,7 +20,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, tidy = "styler")
 ```
 
 Heart disease refers to several types of heart conditions and it is the [number one cause of death worldwide](www.world-heart-federation.org/resources/cardiovascular-diseases-cvds-global-facts-figures/). To prevent heart disease, we must first learn how to reliably detect it. The heart disease data used in this study has various measurements on patients health and cardiovascular statistics.
@@ -44,20 +44,24 @@ We shall use different set of packages in R
 
 ```{r R_library, message=FALSE, warning=FALSE, comment=FALSE, include=TRUE}
 
-#Import packages
+# Import packages
 
 data_exploration_packages <- c("tidyverse", "plotly", "openxlsx")
 
-machine_learning_packages <- c("caret","MASS", "car", "kernlab","rpart","randomForest","class","ada", "rda","e1071", "nnet","ipred", "dbarts", "klaR", "glmnet", 'earth')
+machine_learning_packages <- 
+  c("caret", "MASS", "car", "kernlab", "rpart", 
+    "randomForest", "class", "ada", "rda", "e1071",
+    "nnet", "ipred", "dbarts", "klaR", "glmnet", "earth")
 
-table_formating_packages <- c("knitr","kableExtra")
+table_formating_packages <- c("knitr", "kableExtra")
+ 
 
-
-if(!require(install.load)){
+if (!require(install.load)) {
   install.packages("install.load")
 }
 
-install.load::install_load(c(data_exploration_packages, machine_learning_packages, table_formating_packages))
+install.load::install_load(c(data_exploration_packages, machine_learning_packages, 
+                             table_formating_packages))
 
 ```
 
@@ -66,7 +70,7 @@ install.load::install_load(c(data_exploration_packages, machine_learning_package
 
 As a first step we must load the dataset. 
 
-```{r Training dataset, message=FALSE, warning=FALSE, comment=FALSE, cache=TRUE,include=TRUE}
+```{r Training dataset, message=FALSE, warning=FALSE, comment=FALSE, cache=TRUE, include=TRUE}
 
 # Import dataset
 
@@ -75,7 +79,7 @@ data_labels <- read_csv("Data from DRIVENDATA/train_labels.csv")
 
 # Concatenating the two datasets 
 
-disease_data <- bind_cols(data_values, data_labels[,2])
+disease_data <- bind_cols(data_values, data_labels[, 2])
 
 ```
 
@@ -84,7 +88,9 @@ disease_data <- bind_cols(data_values, data_labels[,2])
 
 ```{r kable1, eval=T, include=T,echo=F}
 
-kable(disease_data, caption = 'Heart disease data', align = rep('c', 15)) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), fixed_thead = T) %>% scroll_box(width = "900px", height = "500px")
+kable(disease_data, caption = "Heart disease data", align = rep("c", 15)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), fixed_thead = T) %>%
+  scroll_box(width = "900px", height = "500px")
  
 ```
 
@@ -129,11 +135,13 @@ There are eight columns in this dataset which do not have the correct data type 
 
 ```{r heart disease dataset, message=FALSE, warning=TRUE, comment=FALSE, cache=TRUE,include=TRUE}
 
-disease_data <-  disease_data[-1] #  patient_id column was dropped
+disease_data <- disease_data[-1] #  patient_id column was dropped
 
 factor_variable_position <- c(1, 2, 4, 6, 7, 10, 13, 14)
 
-disease_data <- disease_data %>% mutate_at(vars(factor_variable_position),as_factor)
+disease_data <- 
+  disease_data %>% 
+  mutate_at(vars(factor_variable_position), as_factor)
 
 ```
 
@@ -146,14 +154,24 @@ As shown in the chart, we have 100 (56%) patients that have no heart disease whi
 
 ```{r chart 1}
 
-theme_set(theme_bw())# The current theme is automatically applied to every plot we draw
+theme_set(theme_bw()) # The current theme is automatically applied to every plot we draw
 
-disease_data <- disease_data %>% mutate(heart_disease_present= fct_recode(heart_disease_present, absent = "0", present = "1"))
+disease_data <- disease_data %>% 
+  mutate(heart_disease_present = fct_recode(heart_disease_present, absent = "0", present = "1"))
 
-chart <- disease_data %>% count(heart_disease_present) %>% mutate(pct= round(n/sum(n)*100)) %>% ggplot(aes(x = heart_disease_present, y=n, fill= heart_disease_present)) + geom_bar(stat = 'identity', width = 0.4, show.legend = FALSE)+ labs(x='Heart disease present', y='Number of patients', caption = "Source: Heart disease data") +
-  scale_fill_manual(values = c( "present" = "red", "absent"= "green"), aesthetics = 'fill') +
-  geom_text(aes(label= str_c(pct, "%")), vjust= 4.5, size=2.5, colour='black') +
-theme(legend.position = 'top', axis.title.y = element_text(size = 12, face='bold'), axis.title.x =element_text(size = 12, face='bold'), axis.text.x = element_text(angle = 50, vjust = 0.3, face = 'bold'))
+chart <- 
+  disease_data %>%
+  count(heart_disease_present) %>%
+  mutate(pct = round(n / sum(n) * 100)) %>%
+  ggplot(aes(x = heart_disease_present, y = n, fill = heart_disease_present)) + 
+  geom_bar(stat = "identity", width = 0.4, show.legend = FALSE) + 
+  labs(x = "Heart disease present", y = "Number of patients", 
+       caption = "Source: Heart disease data") +
+  scale_fill_manual(values = c("present" = "red", "absent" = "green"), aesthetics = "fill") +
+  geom_text(aes(label = str_c(pct, "%")), vjust = 4.5, size = 2.5, colour = "black") +
+  theme(legend.position = "top", axis.title.y = element_text(size = 12, face = "bold"), 
+        axis.title.x = element_text(size = 12, face = "bold"), 
+        axis.text.x = element_text(angle = 50, vjust = 0.3, face = "bold"))
 
 ggplotly(chart, tooltip = c("x", "y"))
 
@@ -166,23 +184,33 @@ The primary goal of visualization for classification problems is to understand w
 
 ```{r chart2}
 
-# If you have column name as a character vector (e.g. col= 'age'), use .data[[col]]. If the column name or expression is supplied by the user, you can pass it to aes() or vars() using {{col}} i.e. curly curly syntax.(This is rlang syntax for writing a function)
+# If you have column name as a character vector (e.g. col= 'age'), use .data[[col]]. 
+# If the column name or expression is supplied by the user, you can pass it to aes() or vars() using {{col}} i.e. 
+#curly curly syntax.(This is rlang syntax for writing a function).
 
-plot_box = function(df, cols, col_x='heart_disease_present'){
-  for(col in cols){
-    p = ggplot(df, aes(x = .data[[col_x]], y = .data[[col]], fill = .data[[col_x]]))+ geom_boxplot(show.legend = FALSE) +
-      scale_fill_manual(values = c( "present" = "red", "absent" = "green"), aesthetics = 'fill') +
-      labs(x='Heart disease present', y= str_c(col),
-       title=str_c('Box plot of', col, '\n vs.',
-      col_x, sep = ' '), caption = "Source: Heart disease data")  + theme(axis.text.x = element_text(face = 'bold'), axis.title.y = element_text(size = 12, face='bold'), axis.title.x =element_text(size = 12, face='bold'))
-    
-  print(p) 
+plot_box <- function(df, cols, col_x = "heart_disease_present") {
+  for (col in cols) {
+    p <- ggplot(df, aes(x = .data[[col_x]], y = .data[[col]], fill = .data[[col_x]])) + 
+      geom_boxplot(show.legend = FALSE) +
+      scale_fill_manual(values = c("present" = "red", "absent" = "green"), aesthetics = "fill") +
+      labs(
+        x = "Heart disease present", y = str_c(col),
+        title = str_c("Box plot of", col, "vs.", col_x, sep = " "),
+        caption = "Source: Heart disease data") + 
+      theme(axis.text.x = element_text(face = "bold"), 
+            axis.title.y = element_text(size = 12, face = "bold"), 
+            axis.title.x = element_text(size = 12, face = "bold"))
+
+    print(p)
   }
 }
 
-num_cols = disease_data %>% select_if(is.numeric) %>% colnames()
+num_cols <- 
+  disease_data %>%
+  select_if(is.numeric) %>%
+  colnames()
 
-plot_box(disease_data, num_cols)    
+plot_box(disease_data, num_cols)
 ```
 
 
@@ -198,26 +226,32 @@ Now we will turn to the problem of visualizing the ability of categorical featur
 
 ```{r chart3}
 
-# Since the facet_var will be supplied by the user, we pass curly curly syntax to vars() using {{facet_var}}
+# Since the facet_var will be supplied by the user, 
+# we pass curly curly syntax to vars() using {{facet_var}}.
 
-plot_bars = function(df, cat_cols, facet_var){
-   for(col in cat_cols){
-    p = ggplot(df, aes(x = .data[[col]], fill = .data[[col]])) + 
-      geom_bar(show.legend = F)  +
-      labs(x = col, y = "Number of patients", title = str_c('Bar plot of ', col, '\nfor heart disease')) +
-      facet_wrap(vars({{facet_var}}), scales = 'free_y') +
-     theme(axis.title.y = element_text(size = 12, face = 'bold'), axis.title.x = element_text(size = 12, face = 'bold'),
-            axis.text.x = element_text(angle = 90, hjust = 1, face = 'bold'))
-    
+plot_bars <- function(df, cat_cols, facet_var) {
+  for (col in cat_cols) {
+    p <- ggplot(df, aes(x = .data[[col]], fill = .data[[col]])) +
+      geom_bar(show.legend = F) +
+      labs(x = col, y = "Number of patients", 
+           title = str_c("Bar plot of ", col, "for heart disease")) +
+      facet_wrap(vars({{ facet_var }}), scales = "free_y") +
+      theme(axis.title.y = element_text(size = 12, face = "bold"), 
+            axis.title.x = element_text(size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 90, hjust = 1, face = "bold"))
+
     print(p)
-    
   }
 }
 
-cat_cols <- disease_data %>% select_if(is.factor) %>% colnames()
+cat_cols <- 
+  disease_data %>%
+  select_if(is.factor) %>%
+  colnames()
+
 cat_cols <- cat_cols[-8] # removing the class label
 
-plot_bars(disease_data, cat_cols, heart_disease_present)    
+plot_bars(disease_data, cat_cols, heart_disease_present)  
 ```
 
 
@@ -249,17 +283,17 @@ we will create randomly sampled training and test data sets. The `createDataPart
 # Create the training and test datasets for disease_dataset
 
 # Step 1: Get row numbers for the training data
-partition <- createDataPartition(disease_data$heart_disease_present, p=0.8, list=FALSE)
+partition <- createDataPartition(disease_data$heart_disease_present, p = 0.8, list = FALSE)
 
-# Step 2: Create the training  dataset
-train_diseaseData <- disease_data[partition,] # Create the training sample
+# Step 2: # Create the training sample
+train_diseaseData <- disease_data[partition, ] 
 
-cat("The dimension of the training set is (",dim(train_diseaseData),")")
+cat("The dimension of the training set is (", dim(train_diseaseData), ")")
 
-# Step 3: Create the test dataset
-test_diseaseData <- disease_data[-partition,] # Create the test sample
+# Step 3: # Create the test sample
+test_diseaseData <- disease_data[-partition, ] 
 
-cat("The dimension of test set is (", dim(test_diseaseData),")")
+cat("The dimension of test set is (", dim(test_diseaseData), ")")
 
 ```
 
@@ -277,15 +311,15 @@ The code in the cell below uses the `preProcess()` function from the caret funct
 
 # Scaling the continuous variables
 
-preProcess_scale_model  <- preProcess(train_diseaseData, method = c("center", "scale"))
+preProcess_scale_model <- preProcess(train_diseaseData, method = c("center", "scale"))
 
-# Here is what preProcess_scale_model does.
-# It only normalize the 5 continuous variables
+# Here is what preProcess_scale_model does
+# It only normalized the 5 continuous variables.
 print(preProcess_scale_model)
 
-train_diseaseData = predict(preProcess_scale_model, train_diseaseData)
+train_diseaseData <- predict(preProcess_scale_model, train_diseaseData)
 
-test_diseaseData = predict(preProcess_scale_model, test_diseaseData)
+test_diseaseData <- predict(preProcess_scale_model, test_diseaseData)
 ```
 
 
@@ -297,18 +331,18 @@ To convert all the nominal or factor variables to numeric, we need to create a *
 
 # Removing the class column on train data to be able to create a one hot encoding
 
-xtrain= train_diseaseData[-length(train_diseaseData)]
+xtrain <- train_diseaseData[-length(train_diseaseData)]
 
 # `fullRank = T` to avoid dummmy trap
 
-dummies <- dummyVars( "~.", data = xtrain, fullRank = T)
+dummies <- dummyVars("~.", data = xtrain, fullRank = T)
 
 # Here is what `dummyVars()` does.
 # It created `one hot encoding` to the nominal variables
 
 print(dummies)
 
-xtrain_dummy <-  predict(dummies, newdata = xtrain)
+xtrain_dummy <- predict(dummies, newdata = xtrain)
 
 # Convert to dataframe
 
@@ -318,9 +352,9 @@ xtrain <- as_tibble(xtrain_dummy)
 
 # Removing the class column on test data
 
-xtest= test_diseaseData[-length(test_diseaseData)]
+xtest <- test_diseaseData[-length(test_diseaseData)]
 
-xtest_dummy <- predict(dummies, newdata= xtest)
+xtest_dummy <- predict(dummies, newdata = xtest)
 
 # Convert to dataframe
 
@@ -342,11 +376,11 @@ Feature selection can involve application of several methods. Two important meth
 
 # Eliminate low variance features
 
-near_zero = nearZeroVar(xtrain, freqCut = 95/5, uniqueCut = 10, saveMetrics = TRUE)
+near_zero <- nearZeroVar(xtrain, freqCut = 95 / 5, uniqueCut = 10, saveMetrics = TRUE)
 
 low_variance_cols <- near_zero[(near_zero$zeroVar == TRUE) | (near_zero$nzv == TRUE), ]
 
-print(low_variance_cols) 
+print(low_variance_cols)
 
 ```
 
@@ -361,7 +395,7 @@ xtrain <- xtrain %>% dplyr::select(-c(resting_ekg_results.1, thal.fixed_defect))
 
 # Appending Y to the `xtrainDummy` dataset
 
-xytrain <- bind_cols(xtrain, y=train_diseaseData$heart_disease_present)
+xytrain <- bind_cols(xtrain, y = train_diseaseData$heart_disease_present)
 
 # Remove low variance columns on test set
 
@@ -369,7 +403,7 @@ xtest <- xtest %>% dplyr::select(-c(resting_ekg_results.1, thal.fixed_defect))
 
 # Appending Y to the `xtestDummy` dataset
 
-xytest <- bind_cols(xtest, y=test_diseaseData$heart_disease_present)
+xytest <- bind_cols(xtest, y = test_diseaseData$heart_disease_present)
 
 ```
 
@@ -378,7 +412,8 @@ xytest <- bind_cols(xtest, y=test_diseaseData$heart_disease_present)
 ```{r variable stored}
 
 # Store X and Y for later use.
-xtrain <- xtrain 
+
+xtrain <- xtrain
 ytrain <- xytrain$y
 
 xtest <- xtest
@@ -426,29 +461,35 @@ We wrote two functions such as `prob.prediction()` and `logloss()`.
 
 # Probability of class prediction function to get the probability of the model prediction for the class labels
 
-prob.prediction <- function(yhat.model){
-  as_tibble(yhat.model) %>% mutate(prob=if_else(absent > present, absent, present)) %>% add_column(ytest= as.numeric(if_else(ytest == "absent", 0, 1))) 
+prob.prediction <- function(yhat.model) {
+  as_tibble(yhat.model) %>%
+    mutate(prob = if_else(absent > present, absent, present)) %>%
+    add_column(ytest = as.numeric(if_else(ytest == "absent", 0, 1)))
 }
 
 
 # Logloss metric for evaluating performance of classifier
 
-logloss = function(actual, predicted, eps = 1e-15) {
-  yhat = pmin(pmax(predicted, eps), 1-eps)
-  logloss <-  - (mean(actual * log(yhat) + (1 - actual) * log(1 - yhat)))
+logloss <- function(actual, predicted, eps = 1e-15) {
+  yhat <- pmin(pmax(predicted, eps), 1 - eps)
+  logloss <- -(mean(actual * log(yhat) + (1 - actual) * log(1 - yhat)))
   return(logloss)
 }
 
 ```
 
-```{r model building, message= F, comment= F, warning= F}
+```{r model building_1, message= F, comment= F, warning= F}
 
 # Models to consider
 
 
 # LDA model
 
-lda.model<- train(y ~ ., data = xytrain, method = "lda", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
+lda.model <- 
+  train(y ~ ., data = xytrain, method = "lda", 
+        trControl = trainControl(method = "cv", number = 10, 
+                                 returnResamp = "all", classProbs = TRUE, 
+                                 summaryFunction = twoClassSummary), metric = "ROC")
 
 yhat.lda <- predict(lda.model, xtest, type = "prob")
 
@@ -458,7 +499,15 @@ logloss_lda <- logloss(lda_data$ytest, lda_data$prob)
 
 # GBM model
 
-GBM.model <- train(y~., data=xytrain, method = "gbm", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary, seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% lapply(., function(x) 1:20)), metric = "ROC", tuneGrid = expand.grid(interaction.depth = 1:2, shrinkage = .1, n.trees = c(10, 50, 100), n.minobsinnode = 10),verbose = FALSE)
+GBM.model <- 
+  train(y ~ ., data = xytrain, method = "gbm", 
+        trControl = trainControl(method = "cv", number = 10, 
+                                 returnResamp = "all", classProbs = TRUE, 
+                                 summaryFunction = twoClassSummary, 
+                                 seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% 
+                                   lapply(., function(x) 1:20)), metric = "ROC", 
+        tuneGrid = expand.grid(interaction.depth = 1:2, 
+                               shrinkage = .1, n.trees = c(10, 50, 100), n.minobsinnode = 10), verbose = FALSE)
 
 yhat.GBM <- predict(GBM.model, xtest, type = "prob")
 
@@ -469,7 +518,11 @@ logloss_GBM <- logloss(GBM_data$ytest, GBM_data$prob)
 
 # SVM model
 
-svm.model <- train(y ~ ., data = xytrain, method = "svmLinear2", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE), tuneGrid = data.frame(cost = c(.25, .5, 1)))
+svm.model <- 
+  train(y ~ ., data = xytrain, method = "svmLinear2", 
+        trControl = trainControl(method = "cv", number = 10, 
+                                 returnResamp = "all", classProbs = TRUE), 
+        tuneGrid = data.frame(cost = c(.25, .5, 1)))
 
 yhat.svm <- predict(svm.model, xtest, type = "prob")
 
@@ -480,7 +533,11 @@ logloss_svm <- logloss(svm_data$ytest, svm_data$prob)
 
 # KNN model
 
-knn.model <- train(y ~.,data=xytrain, method = "knn", trControl=trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
+knn.model <- 
+  train(y ~.,data=xytrain, method = "knn", 
+        trControl=trainControl(method = "cv", number = 10, 
+                               returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), 
+        metric = "ROC")
 
 yhat.knn <- predict(knn.model, newdata = xtest, type="prob")
 
@@ -491,21 +548,29 @@ logloss_knn <- logloss(knn_data$ytest, knn_data$prob)
 
 # Ctree
 
-ctree.model <- train(y ~ ., data = xytrain, method = "ctree",  trControl = trainControl(method = "cv", number = 10, returnResamp = "all"))
-
-yhat.ctree <- predict(ctree.model, newdata = xtest, type="prob")
-
+ctree.model <- 
+  train(y ~ ., data = xytrain, method = "ctree", 
+        trControl = trainControl(method = "cv", number = 10, 
+                                 returnResamp = "all"))
+yhat.ctree <- predict(ctree.model, newdata = xtest, type = "prob")
 
 ctree_data <- prob.prediction(yhat.model = yhat.ctree)
 
 logloss_ctree <- logloss(ctree_data$ytest, ctree_data$prob)
 
+```
+
+```{r model building_2, message= F, comment= F, warning= F}
+
+# Models to consider
 
 # CART
 
-cart.model <- train(y ~ ., data = xytrain, method = "rpart",  trControl = trainControl(method = "cv", number = 10, returnResamp = "all"))
+cart.model <- train(y ~ ., data = xytrain, 
+                    method = "rpart", trControl = trainControl(method = "cv", 
+                                                               number = 10, returnResamp = "all"))
 
-yhat.cart <- predict(cart.model, newdata = xtest, type="prob")
+yhat.cart <- predict(cart.model, newdata = xtest, type = "prob")
 
 
 cart_data <- prob.prediction(yhat.model = yhat.cart)
@@ -515,10 +580,14 @@ logloss_cart <- logloss(cart_data$ytest, cart_data$prob)
 
 # cforest
 
-cforest.model <- train(y ~ ., data = xytrain, method = "cforest", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary, seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% lapply(., function(x) 1:20)), metric = "ROC", controls = party::cforest_unbiased(ntree = 20))
+cforest.model <- train(y ~ ., data = xytrain, 
+                       method = "cforest", trControl = trainControl(method = "cv", 
+                                                                    number = 10, returnResamp = "all", classProbs = TRUE, 
+                                                                    summaryFunction = twoClassSummary, 
+                                                                    seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% lapply(., function(x) 1:20)), metric = "ROC", controls = party::cforest_unbiased(ntree = 20))
 
 
-yhat.cforest <- predict(cforest.model, newdata = xtest, type="prob")
+yhat.cforest <- predict(cforest.model, newdata = xtest, type = "prob")
 
 cforest_data <- prob.prediction(yhat.model = yhat.cforest)
 
@@ -536,7 +605,11 @@ logloss_gausspr <- logloss(gausspr_data$ytest, gausspr_data$prob)
 
 # rForest
 
-rforest.model <- train(y ~ ., data = xytrain, method = "rf", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE,summaryFunction = twoClassSummary, seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% lapply(., function(x) 1:20)),metric = "ROC", ntree = 20,importance = TRUE)
+rforest.model <- train(y ~ ., data = xytrain, 
+                       method = "rf", trControl = trainControl(method = "cv", number = 10, 
+                                                               returnResamp = "all", classProbs = TRUE,summaryFunction = twoClassSummary, 
+                                                               seeds = vector(mode = "list", length = nrow(xytrain) + 1) %>% 
+                                                                 lapply(., function(x) 1:20)),metric = "ROC", ntree = 20,importance = TRUE)
 
 yhat.rforest <- predict( rforest.model, xtest, type='prob')
 
@@ -547,7 +620,11 @@ logloss_rforest <- logloss(rforest_data$ytest, rforest_data$prob)
 
 # Adaboost
 
-adaboost.model <- train(y ~ ., data = xytrain, method = "adaboost", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary, seeds =vector(mode = "list", length = nrow(xytrain) + 1) %>% lapply(., function(x) 1:20)),metric = "ROC")
+adaboost.model <- train(y ~ ., data = xytrain, 
+                        method = "adaboost", trControl = trainControl(method = "cv", 
+                                                                      number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary, 
+                                                                      seeds =vector(mode = "list", length = nrow(xytrain) + 1) %>% 
+                                                                        lapply(., function(x) 1:20)),metric = "ROC")
 
 
 yhat.adaboost <- predict( adaboost.model, xtest, type='prob')
@@ -555,13 +632,23 @@ yhat.adaboost <- predict( adaboost.model, xtest, type='prob')
 adaboost_data <- prob.prediction(yhat.model = yhat.adaboost)
 
 logloss_adaboost <- logloss(adaboost_data$ytest, adaboost_data$prob)
+```
+
+```{r model building_3, message= F, comment= F, warning= F}
+
+# Models to consider
 
 # Nnet
 
-nnet.model <- train(y ~ ., data = xytrain, method = "nnet", trControl = trainControl(method = "cv", number = 10, returnResamp = "all"),
-trace = FALSE)
+nnet.model <- train(y ~ .,
+  data = xytrain, method = "nnet",
+  trControl = trainControl(
+    method = "cv", number = 10,
+    returnResamp = "all"
+  ), trace = FALSE
+)
 
-yhat.nnet <- predict(nnet.model, xtest, type="prob")
+yhat.nnet <- predict(nnet.model, xtest, type = "prob")
 
 nnet_data <- prob.prediction(yhat.model = yhat.nnet)
 
@@ -570,9 +657,11 @@ logloss_nnet <- logloss(nnet_data$ytest, nnet_data$prob)
 
 # LogitBoost
 
-logit.model <- train(y ~ ., data = xytrain, method = "LogitBoost", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
+logit.model <- train(y ~ ., data = xytrain, method = "LogitBoost", 
+                     trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), 
+                     metric = "ROC")
 
-yhat.logit <- predict(logit.model, xtest, type="prob")
+yhat.logit <- predict(logit.model, xtest, type = "prob")
 
 logit_data <- prob.prediction(yhat.model = yhat.logit)
 
@@ -581,9 +670,12 @@ logloss_logit <- logloss(logit_data$ytest, logit_data$prob)
 
 # NaiveBayes
 
-naiveBayes.model <- train( y ~ ., data = xytrain, method = "naive_bayes", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
+naiveBayes.model <- train(y ~ ., data = xytrain, 
+                          method = "naive_bayes", trControl = trainControl(method = "cv", 
+                                                                           number = 10, returnResamp = "all", 
+                                                                           classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
 
-yhat.naiveBayes <- predict(naiveBayes.model, xtest, type='prob')
+yhat.naiveBayes <- predict(naiveBayes.model, xtest, type = "prob")
 
 naiveBayes_data <- prob.prediction(yhat.model = yhat.naiveBayes)
 
@@ -591,7 +683,10 @@ logloss_naiveBayes <- logloss(naiveBayes_data$ytest, naiveBayes_data$prob)
 
 # MARS model
 
-mars.model <- train(y~., data=xytrain, method='earth', trControl=trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE),   tuneGrid = data.frame(degree = 1, nprune = (2:4)*2))
+mars.model <- train(y~., data=xytrain, method='earth', 
+                    trControl=trainControl(method = "cv", number = 10,  
+                                           returnResamp = "all", classProbs = TRUE), 
+                    tuneGrid = data.frame(degree = 1, nprune = (2:4)*2))
 
 yhat.mars  <- predict(mars.model, xtest, type='prob')
 
@@ -601,9 +696,14 @@ logloss_mars <- logloss(mars_data$ytest, mars_data$prob)
 
 # glmnet model
 
-glmnet.model <- train(y~., data=xytrain, method='glmnet',   trControl =trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary),metric = "ROC", tuneGrid = expand.grid(.alpha = seq(.05, 1, length = 15), .lambda = c((1:5)/10)))
+glmnet.model <- train(y ~ ., data = xytrain, method = "glmnet", 
+                      trControl = trainControl(method = "cv", number = 10, 
+                                               returnResamp = "all", classProbs = TRUE, 
+                                               summaryFunction = twoClassSummary), 
+                      metric = "ROC", tuneGrid = expand.grid(.alpha = seq(.05, 1, length = 15), 
+                                                             .lambda = c((1:5) / 10)))
 
-yhat.glmnet  <- predict(glmnet.model, xtest, type='prob')
+yhat.glmnet <- predict(glmnet.model, xtest, type = "prob")
 
 glmnet_data <- prob.prediction(yhat.model = yhat.glmnet)
 
@@ -612,18 +712,25 @@ logloss_glmnet <- logloss(glmnet_data$ytest, glmnet_data$prob)
 
 # xgbTree
 
-xgbtree.model <- train(y ~ ., data = xytrain, method = "xgbTree", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC", tuneGrid =  expand.grid(nrounds = c(1, 10), max_depth = c(1, 4), eta = c(.1, .4), gamma = 0, colsample_bytree = .7, min_child_weight = 1,subsample = c(.8, 1)))
+xgbtree.model <- train(y ~ ., data = xytrain, 
+                       method = "xgbTree", trControl = trainControl(method = "cv", number = 10, 
+returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC", 
+tuneGrid = expand.grid(nrounds = c(1, 10), 
+                       max_depth = c(1, 4), eta = c(.1, .4), gamma = 0, colsample_bytree = .7, 
+                       min_child_weight = 1, subsample = c(.8, 1)))
 
-yhat.xgbtree <- predict(xgbtree.model, xtest, type='prob')
+yhat.xgbtree <- predict(xgbtree.model, xtest, type = "prob")
 
 xgbtree_data <- prob.prediction(yhat.model = yhat.xgbtree)
 
 logloss_xgbtree <- logloss(xgbtree_data$ytest, xgbtree_data$prob)
 
 
-j48.model <- train(y ~ ., data = xytrain, method = "J48", trControl = trainControl(method = "cv", number = 10, returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
+j48.model <- train(y ~ ., data = xytrain, 
+                   method = "J48", trControl = trainControl(method = "cv", number = 10, 
+returnResamp = "all", classProbs = TRUE, summaryFunction = twoClassSummary), metric = "ROC")
 
-yhat.j48 <- predict(j48.model, xtest, type='prob')
+yhat.j48 <- predict(j48.model, xtest, type = "prob")
 
 j48_data <- prob.prediction(yhat.model = yhat.j48)
 
@@ -635,13 +742,24 @@ logloss_j48 <- logloss(xgbtree_data$ytest, j48_data$prob)
 
 # Models logloss comparision to check for the best model
 
-evaluation <- tibble(lda= logloss_lda, GBM= logloss_GBM, SVM =logloss_svm, KNN = logloss_knn, ctree = logloss_ctree, CART = logloss_cart, cforest = logloss_cforest, `gauss process` = logloss_gausspr, `Random forest` = logloss_rforest, Adaboost = logloss_adaboost, `Neural network` = logloss_nnet, "Logistic" = logloss_logit, Naivebayes = logloss_naiveBayes, MARS = logloss_mars, glmnet = logloss_glmnet, XGBtree =logloss_xgbtree, j48=logloss_j48)
+evaluation <- tibble(lda = logloss_lda, GBM = logloss_GBM, SVM = logloss_svm, KNN = logloss_knn, 
+                     ctree = logloss_ctree, CART = logloss_cart, cforest = logloss_cforest, 
+                     `gauss process` = logloss_gausspr, `Random forest` = logloss_rforest, 
+                     Adaboost = logloss_adaboost, `Neural network` = logloss_nnet, 
+                     Logistic = logloss_logit, Naivebayes = logloss_naiveBayes, 
+                     MARS = logloss_mars, glmnet = logloss_glmnet, XGBtree = logloss_xgbtree, 
+                     j48 = logloss_j48)
 
-logloss= t(evaluation)
+logloss <- t(evaluation)
 
-Model = rownames(logloss)
+Model <- rownames(logloss)
 
-comparision_table= as_tibble(logloss) %>% add_column(Model) %>% rename(logloss="V1") %>%  arrange(logloss) %>% add_column(SN= 1:length(Model),.after = 0) %>% dplyr::select(SN, Model, logloss)
+comparision_table <- as_tibble(logloss) %>%
+  add_column(Model) %>%
+  rename(logloss = "V1") %>%
+  arrange(logloss) %>%
+  add_column(SN = 1:length(Model), .after = 0) %>%
+  dplyr::select(SN, Model, logloss)
 
 ```
 
@@ -649,7 +767,7 @@ comparision_table= as_tibble(logloss) %>% add_column(Model) %>% rename(logloss="
 
 ```{r evaluation_table, eval= T, include= T, echo= F}
 
-kable(comparision_table,align = c('c', 'c', 'c'), caption = "Models performance with logloss metric") %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+kable(comparision_table, align = c("c", "c", "c"), caption = "Models performance with logloss metric") %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 ```
 
@@ -658,7 +776,7 @@ kable(comparision_table,align = c('c', 'c', 'c'), caption = "Models performance 
 
 minlogloss <- comparision_table %>% filter(logloss == min(logloss))
 
-kable(minlogloss, caption = 'Optimal model', align = c('c', 'c')) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+kable(minlogloss, caption = "Optimal model", align = c("c", "c")) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 ```
 
@@ -681,14 +799,16 @@ validation_data <- validation_data[-1] # patient_id column dropped
 
 factor_variable_position <- c(1, 2, 4, 6, 7, 10, 13)
 
-validation_data<- validation_data %>% mutate_at(vars(factor_variable_position),as_factor)
+validation_data <- 
+  validation_data %>% 
+  mutate_at(vars(factor_variable_position), as_factor)
 
 
 # Applying preprocessing to the validation dataset
 
-validation_data <-  predict(preProcess_scale_model,newdata = validation_data)
+validation_data <- predict(preProcess_scale_model, newdata = validation_data)
 
-validation_dummy <-  predict(dummies, newdata = validation_data)
+validation_dummy <- predict(dummies, newdata = validation_data)
 
 # Convert to dataframe
 
@@ -696,8 +816,9 @@ xvalidation <- as_tibble(validation_dummy)
 
 # Remove low variance columns on validation set
 
-xvalidation <- xvalidation %>% dplyr::select(-c(resting_ekg_results.1,
-thal.fixed_defect))
+xvalidation <- 
+  xvalidation %>% 
+  dplyr::select(-c(resting_ekg_results.1, thal.fixed_defect))
 
 # Predicting the class label
 
@@ -705,9 +826,12 @@ validation_label <- predict(adaboost.model, xvalidation)
 
 # Convert to data frame
 
-validation_label <- tibble(heart_disease_present=validation_label)
+validation_label <- tibble(heart_disease_present = validation_label)
 
-validation_table <- validation_label %>% count(heart_disease_present) %>% mutate(Percent = round(n/sum(n)*100, 2))
+validation_table <- 
+  validation_label %>%
+  count(heart_disease_present) %>%
+  mutate(Percent = round(n / sum(n) * 100, 2))
 
 ```
 
@@ -716,7 +840,9 @@ validation_table <- validation_label %>% count(heart_disease_present) %>% mutate
 ```{r Predicted_labels, eval=T, include=T, echo=F}
 # Counting the number of each predicted class
 
-kable(validation_table, caption = 'Summary of predicted labels on validation data', align = c('l','c')) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>% scroll_box(width = "900px", height = "10px")
+kable(validation_table, caption = "Summary of predicted labels on validation data", align = c("l", "c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  scroll_box(width = "900px", height = "10px")
 ```
 
 
@@ -726,14 +852,18 @@ kable(validation_table, caption = 'Summary of predicted labels on validation dat
 
 submission_format <- read_csv("Data from DRIVENDATA/submission_format.csv")
 
-submission_format <- submission_format %>% mutate(heart_disease_present=validation_label$heart_disease_present) 
+submission_format <- 
+  submission_format %>% 
+  mutate(heart_disease_present = validation_label$heart_disease_present)
 ```
 
 
 ```{r Validation class labels, eval=T, include=T, echo=F}
 # Counting the number of each predicted class
 
-kable(submission_format, caption = 'Validation data class prediction using optimal model (Adaboost classifier)', align = c('l','c')) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), fixed_thead = T) %>% scroll_box(width = "900px", height = "400px")
+kable(submission_format, caption = "Validation data class prediction using optimal model (Adaboost classifier)", align = c("l", "c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), fixed_thead = T) %>%
+  scroll_box(width = "900px", height = "400px")
 
 
 ```
@@ -744,4 +874,4 @@ This study considered $17$ different catalogs of machine learning models which a
 
 ---
 
-If you like this writeup, you can also follow me on [Twitter](https://www.twitter.com/gbganalyst){target="_blank"} and [Linkedin](https://www.linkedin.com/in/ezekiel-ogundepo/){target="_blank"} for more updates in `R` and `Python` for datascience.
+The Github repository can be found [here](https://github.com/gbganalyst/Predicting-Heart-Disease) and if you like this writeup, you can also follow me on [Twitter](https://www.twitter.com/gbganalyst){target="_blank"} and [Linkedin](https://www.linkedin.com/in/ezekiel-ogundepo/){target="_blank"} for more updates in `R` and `Python` for datascience.
